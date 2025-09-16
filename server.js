@@ -19,42 +19,17 @@ app.get("/health", (req, res) => {
    })
 })
 
-function nextArrival(now = new Date(), headwayMin = 3) {
-    const tz = "Europe/Paris";
-    const toHM = d =>
-        String(d.getHours()).padStart(2, "0") +
-        ":" +
-        String(d.getMinutes()).padStart(2, "0");
-
-    const start = new Date(now);
-    start.setHours(5, 30, 0, 0); 
-    const end = new Date(now);
-    end.setHours(1, 15, 0, 0); 
-    const lastWindow = new Date(now);
-    lastWindow.setHours(0, 45, 0, 0); 
-
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    const afterStart = hour > 5 || (hour === 5 && minute >= 30);
-    const beforeEnd = hour < 1 || (hour === 1 && minute <= 15);
-    const serviceOpen = afterStart || beforeEnd;
-
-    if (!serviceOpen) {
-        return { service: "closed", tz };
-    }
-
+function nextArrival(headwayMin = 3) {
+    const now = new Date();
     const next = new Date(now.getTime() + headwayMin * 60 * 1000);
-
-    return {
-        nextArrival: toHM(next),
-        isLast: now >= lastWindow,
-        headwayMin,
-        tz,
-    };
-}
+    const hh = String(next.getHours()).padStart(2, '0');
+    const mm = String(next.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  }
 
 app.get("/next-metro", (req, res) => {
-    const station = req.query.station;
+    const station = (req.query.station || '').toString().trim();
+
 
     if (!station) {
         return res.status(400).json({ error: "mising station" });

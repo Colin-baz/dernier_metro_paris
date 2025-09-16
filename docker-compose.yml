@@ -1,0 +1,23 @@
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.v1
+    image: dm-api:v1
+    environment:
+      - PORT=3000
+    ports:
+      - "3000:3000"
+
+  swagger:
+    image: swaggerapi/swagger-ui:latest
+    environment:
+      - SWAGGER_JSON=/openapi/openapi.yaml
+    volumes:
+      - ./openapi:/usr/share/nginx/html/openapi:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
+

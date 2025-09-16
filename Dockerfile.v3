@@ -1,0 +1,18 @@
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json package-lock.json* ./
+
+#créer un utilisateur dédié
+ARG UID=1000
+ARG GID=1000
+
+RUN addgroup --gid ${GID}
+RUN adduser --uid ${UID} --gid ${GID}
+
+COPY --chown=app:addgroup . .
+
+RUN npm install 
+COPY . .
+ENV PORT=3000
+EXPOSE 3000
+CMD ["node", "server.js"]

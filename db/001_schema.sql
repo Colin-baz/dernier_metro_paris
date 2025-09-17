@@ -1,6 +1,5 @@
-CREATE TABLE IF NOT EXISTS config (
-    id SERIAL PRIMARY KEY,
-    key TEXT UNIQUE NOT NULL,
-    value JSONB NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS public.config (
+  key   text PRIMARY KEY,
+  value jsonb NOT NULL
 );
+

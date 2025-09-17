@@ -39,7 +39,7 @@ services:
   swagger:
     image: swaggerapi/swagger-ui:latest
     environment:
-    - URLS=[{"url":"/openapi/openapi.yaml","name":"Dernier Métro API"}]
+    - SWAGGER_JSON=/openapi/openapi.yaml
     volumes:
       - ./openapi:/usr/share/nginx/html/openapi:ro
     ports:

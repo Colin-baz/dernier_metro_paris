@@ -4,12 +4,14 @@ const {Pool} = require("pg");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const pool = new Pool({
-    user: process.env.POSTGRES_USER,
-    host: process.env.POSTGRES_HOST,
+const dbPool = new Pool({
+    user: process.env.POSTGRES_USER ,
+    host: process.env.POSTGRES_HOST ,
     database: process.env.POSTGRES_DB,
-    password: process.env.POSTGRES_PASSWORD,
+    password: process.env.POSTGRES_PASSWORD ,
     port: process.env.POSTGRES_PORT,
+    max: 5,
+	idleTimeoutMillis: 10000
 });
 
 app.use((req, res, next) => {
@@ -21,16 +23,16 @@ app.use((req, res, next) => {
     next();
   });
 
-app.get("/health", (req, res) => {
+app.get("/health", (_req, res) => {
    return res.status(200).json({
         message : "Server OK",
         status : "success"
    })
 })
 
-app.get("/health", async (req, res) => {
+app.get("/db-health", async (_req, res) => {
     try {
-        const result = await dbPool.query("SELECT NOW() as TEST");
+        const result = await dbPool.query("SELECT 1 as TEST");
         res.status(200).json({ status: "ok", dbTime: result.rows[0].now });
     } catch (error) {
         console.error("Health check failed:", error);
@@ -47,30 +49,67 @@ function nextArrival(headwayMin = 3) {
   }
 
 app.get("/next-metro", (req, res) => {
-    const station = (req.query.station || '').toString().trim();
-
-
+    const station = (req.query.station || '').trim();
     if (!station) {
-        return res.status(400).json({ error: "mising station" });
+        return res.status(400).json({ error: "missing station" });
     }
 
-    const result = nextArrival(new Date(), 3);
-
-    if (result.service === "closed") {
-        return res.status(200).json(result);
-    }
+    const nextTime = nextArrival(3); 
 
     return res.status(200).json({
+        tz: "Europe/Paris",
         station,
         line: "M1",
-        headwayMin: result.headwayMin,
-        nextArrival: result.nextArrival,
-        isLast: result.isLast,
-        tz: result.tz,
+        headwayMin: 3,
+        nextArrival: nextTime
     });
 });
 
-app.use((req, res) => {
+
+app.get("/last-metro", async (req, res) => {
+  const stationQuery = (req.query.station || "").trim().toLowerCase();
+  if (!stationQuery) {
+    return res.status(400).json({ error: "missing station" });
+  }
+
+  try {
+    const defaultsRes = await dbPool.query(
+      "SELECT value FROM config WHERE key = 'metro.defaults'"
+    );
+    const lastRes = await dbPool.query(
+      "SELECT value FROM config WHERE key = 'metro.last'"
+    );
+
+    const defaults = defaultsRes.rows[0].value; 
+    const lastMap = lastRes.rows[0].value;
+  
+    const match = Object.entries(lastMap).find(
+      ([key]) => key.toLowerCase() === stationQuery
+    );
+
+    if (!match) {
+      return res.status(404).json({ error: "missing station" });
+    }
+
+    const [stationName, lastMetro] = match;
+
+    console.log("defaults:", defaults, "lastMap:", lastMap, "match:", match);
+
+    return res.status(200).json({
+      station: stationName,
+      lastMetro,
+      line: defaults.line,
+      tz: defaults.tz
+    });
+
+  } catch (err) {
+    console.error("error db in /last-metro:", err);
+    return res.status(500).json({ error: "internal server error" });
+  }
+});
+
+
+app.use((_req, res) => {
     return res.status(404).json({
         message: "Route not found",
         error: "Not Found"

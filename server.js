@@ -1,7 +1,16 @@
 "use strict";
 const express = require("express");
+const {Pool} = require("pg");
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const pool = new Pool({
+    user: process.env.POSTGRES_USER,
+    host: process.env.POSTGRES_HOST,
+    database: process.env.POSTGRES_DB,
+    password: process.env.POSTGRES_PASSWORD,
+    port: process.env.POSTGRES_PORT,
+});
 
 app.use((req, res, next) => {
     const start = Date.now();
@@ -17,6 +26,16 @@ app.get("/health", (req, res) => {
         message : "Server OK",
         status : "success"
    })
+})
+
+app.get("/health", async (req, res) => {
+    try {
+        const result = await dbPool.query("SELECT NOW() as TEST");
+        res.status(200).json({ status: "ok", dbTime: result.rows[0].now });
+    } catch (error) {
+        console.error("Health check failed:", error);
+        res.status(500).json({ status: "error", error: "Database connection failed" });
+    }
 })
 
 function nextArrival(headwayMin = 3) {

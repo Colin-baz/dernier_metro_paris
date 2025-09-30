@@ -57,3 +57,58 @@ paths:
                 properties:
                   error:
                     type: string
+  /last-metro:
+    get:
+      summary: Heure du dernier métro 
+      parameters:
+        - in: query
+          name: station
+          schema:
+            type: string
+          required: true
+          description: Nom de la station
+      responses:
+        '200':
+          description: Heure du dernier métro trouvée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  station:
+                    type: string
+                  lastMetro:
+                    type: string
+                    example: "01:10"
+                  line:
+                    type: string
+                  tz:
+                    type: string
+                    example: "Europe/Paris"
+        '400':
+          description: station manquante
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Station inconnue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Erreur interne 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

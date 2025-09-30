@@ -81,7 +81,7 @@ app.get("/last-metro", async (req, res) => {
     );
 
     const defaults = defaultsRes.rows[0].value; 
-    const lastMap = lastRes.rows[0].value;
+    const lastMap = lastRes.rows[0].value;  
   
     const match = Object.entries(lastMap).find(
       ([key]) => key.toLowerCase() === stationQuery

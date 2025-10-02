@@ -2,6 +2,7 @@
 const express = require("express");
 const {Pool} = require("pg");
 const app = express();
+const { nextArrival } = require("./utils/time.js");
 const PORT = process.env.PORT || 3000;
 
 const dbPool = new Pool({
@@ -39,14 +40,6 @@ app.get("/db-health", async (_req, res) => {
         res.status(500).json({ status: "error", error: "Database connection failed" });
     }
 })
-
-function nextArrival(headwayMin = 3) {
-    const now = new Date();
-    const next = new Date(now.getTime() + headwayMin * 60 * 1000);
-    const hh = String(next.getHours()).padStart(2, '0');
-    const mm = String(next.getMinutes()).padStart(2, '0');
-    return `${hh}:${mm}`;
-  }
 
 app.get("/next-metro", (req, res) => {
     const station = (req.query.station || '').trim();
@@ -115,6 +108,7 @@ app.use((_req, res) => {
         error: "Not Found"
     });
 })
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
